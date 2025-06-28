@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cricket Tap!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+      import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+  apiKey: "AIzaSyAVJfgoJbQVpsrMphdJhjVP1HJbTohKYv0",
+  authDomain: "tap-hero-cricket.firebaseapp.com",
+  projectId: "tap-hero-cricket",
+  storageBucket: "tap-hero-cricket.firebasestorage.app",
+  messagingSenderId: "862647958483",
+  appId: "1:862647958483:web:0779231b62cc13d3454d26"
+};
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      let userId = null;
+      let currentPlayerName = ""; // To store the player's name
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // User is signed in anonymously.
+          userId = user.uid;
+          // Try to fetch player name from Firestore
+          const playerNamesRef = collection(db, "playerNames");
+          const q = query(playerNamesRef, where("userId", "==", userId), limit(1));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            currentPlayerName = querySnapshot.docs[0].data().playerName;
+            playerNameInput.value = currentPlayerName; // Pre-fill the input
+          } else {
+            // If no name found, ensure input is clear for new entry
+            playerNameInput.value = "";
+          }
+        } else {
+          // User is signed out.
+          userId = null;
+          currentPlayerName = "";
+          signInAnonymously(auth).catch((error) => {
+            console.error("Anonymous sign-in failed:", error);
+          });
+        }
+      });
+
+      // --- Firebase Functions (within module scope) ---
+      async function saveScore(playerName, score) {
+        if (!userId) {
+          console.error("User not signed in, cannot save score.");
+          return;
+        }
+        try {
+          // Save player name mapping if it's new or updated
+          const playerNamesRef = collection(db, "playerNames");
+          const q = query(playerNamesRef, where("userId", "==", userId), limit(1));
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+            await addDoc(playerNamesRef, {
+              userId: userId,
+              playerName: playerName,
+              timestamp: new Date(),
+            });
+          } else {
+            // Update existing player name if it changed
+            const docRef = querySnapshot.docs[0].ref;
+            if (querySnapshot.docs[0].data().playerName !== playerName) {
+              await updateDoc(docRef, {
+                playerName: playerName,
+                timestamp: new Date(),
+              });
+            }
+          }
+
+          await addDoc(collection(db, "scores"), {
+            userId: userId,
+            playerName: playerName,
+            score: score,
+            timestamp: new Date(),
+          });
+          console.log("Score saved successfully!");
+        } catch (e) {
+          console.error("Error adding document: ", e);
+        }
+      }
+
+      async function displayLeaderboard(listId, isDaily = false) {
+        const leaderboardList = document.getElementById(listId);
+        if (!leaderboardList) return;
+
+        leaderboardList.innerHTML = "Loading Leaderboard...";
+
+        try {
+          let q = query(collection(db, "scores"));
+
+          if (isDaily) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+
+            q = query(
+              collection(db, "scores"),
+              where("timestamp", ">=", today),
+              where("timestamp", "<", tomorrow),
+              orderBy("score", "desc"),
+              limit(20) // Daily top 20
+            );
+          } else {
+            q = query(collection(db, "scores"), orderBy("score", "desc"), limit(10));
+          }
+
+          const querySnapshot = await getDocs(q);
+
+          leaderboardList.innerHTML = ""; // Clear loading message
+          if (querySnapshot.empty) {
+            leaderboardList.innerHTML = "<li>No scores yet. Be the first!</li>";
+            return;
+          }
+
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const listItem = document.createElement("li");
+            listItem.textContent = `${data.playerName}: ${data.score}`;
+            leaderboardList.appendChild(listItem);
+          });
+        } catch (e) {
+          console.error("Error fetching leaderboard: ", e);
+          leaderboardList.innerHTML = "<li>Error loading leaderboard.</li>";
+        }
+      }
+
+      // Expose functions to the global scope
+      window.saveScore = saveScore;
+      window.displayLeaderboard = displayLeaderboard;
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: "Fredoka One", cursive;
+        background-color: #1a202c;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #main-wrapper {
+        position: relative;
+        width: 100vw;
+        height: calc(var(--vh, 1vh) * 100);
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+        background-color: #2d3748;
+        background-image: url('./assets/background_pitch.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      @media (min-width: 769px) {
+        #main-wrapper {
+          max-width: 800px;
+          max-height: 600px;
+          height: 100%;
+          border: 4px solid #4caf50;
+          border-radius: 20px;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .game-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        backdrop-filter: blur(8px);
+        background-color: rgba(26, 32, 44, 0.7);
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: center;
+        border-radius: 0;
+      }
+
+      @media (min-width: 769px) {
+        .game-screen {
+          border-radius: 20px;
+        }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      input[type="text"] {
+        @apply px-4 py-3 rounded-lg bg-gray-800 text-black border-2 border-green-500 focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-600 shadow-lg transition-all duration-300;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      /* Retaining your button styles */
+      button {
+        @apply px-8 py-4 rounded-full font-extrabold text-lg text-white transition-all duration-300 ease-in-out;
+        background: linear-gradient(145deg, #4caf50, #2e8b57);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        border: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button:hover {
+        background: linear-gradient(145deg, #2e8b57, #4caf50);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6);
+        transform: translateY(-3px);
+      }
+      button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        background: #2e8b57;
+      }
+
+      .ui-text-shadow {
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+      }
+
+      @media (min-width: 769px) {
+        #start-screen h1 {
+          font-size: 4.5rem;
+          margin-bottom: 3.5rem;
+        }
+        #start-screen label {
+          font-size: 1.4rem;
+        }
+        #game-over-screen h2 {
+          font-size: 5.5rem;
+          margin-bottom: 2.5rem;
+        }
+        #game-over-screen .score-display {
+          font-size: 3rem;
+          margin-bottom: 2rem;
+        }
+        #game-over-screen .outs-display {
+          font-size: 2.5rem;
+          margin-bottom: 3.5rem;
+        }
+        button {
+          font-size: 1.5rem;
+          padding: 1.2rem 3rem;
+        }
+        input[type="text"] {
+          font-size: 1.2rem;
+          padding: 0.8rem 1.5rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        #start-screen h1 {
+          font-size: 3rem;
+          margin-bottom: 2.5rem;
+        }
+        #start-screen label {
+          font-size: 1.1rem;
+        }
+        #game-over-screen h2 {
+          font-size: 4rem;
+          margin-bottom: 2rem;
+        }
+        #game-over-screen .score-display {
+          font-size: 2.2rem;
+          margin-bottom: 1.5rem;
+        }
+        #game-over-screen .outs-display {
+          font-size: 1.8rem;
+          margin-bottom: 2.5rem;
+        }
+        button {
+          font-size: 1.125rem;
+          padding: 1rem 2rem;
+        }
+        input[type="text"] {
+          font-size: 1rem;
+          padding: 0.75rem;
+        }
+        .game-screen {
+          padding: 30px 20px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        #start-screen h1 {
+          font-size: 2.5rem;
+          margin-bottom: 2rem;
+        }
+        #start-screen label {
+          font-size: 1rem;
+        }
+        #game-over-screen h2 {
+          font-size: 3.2rem;
+          margin-bottom: 1.5rem;
+        }
+        #game-over-screen .score-display {
+          font-size: 1.8rem;
+          margin-bottom: 1rem;
+        }
+        #game-over-screen .outs-display {
+          font-size: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        button {
+          font-size: 1rem;
+          padding: 0.8rem 1.8rem;
+        }
+        input[type="text"] {
+          font-size: 0.9rem;
+          padding: 0.6rem;
+        }
+        .game-screen {
+          padding: 20px 10px;
+        }
+        #start-screen .mb-6 {
+          margin-bottom: 1.5rem;
+        }
+      }
+
+      #game-ui {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 2.5vw;
+        box-sizing: border-box;
+      }
+
+      #game-ui .row-top {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 0.5vw;
+      }
+
+      #runs-display,
+      #outs-display,
+      #ball-type-display {
+        color: #fff;
+        font-weight: 800;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+        font-size: 5vw;
+        line-height: 1.2;
+        padding: 0.5vw;
+        white-space: nowrap;
+      }
+
+      #outs-display {
+        color: #ff7043;
+      }
+
+      #ball-type-display {
+        text-align: right;
+        color: #add8e6;
+      }
+
+      @media (min-width: 769px) {
+        #game-ui {
+          padding: 20px;
+        }
+        #game-ui .row-top {
+          margin-bottom: 5px;
+        }
+        #runs-display,
+        #outs-display,
+        #ball-type-display {
+          font-size: 32px;
+          padding: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-wrapper">
+      <div id="start-screen" class="game-screen">
+        <h1
+          class="text-5xl font-extrabold mb-10 text-yellow-400 ui-text-shadow"
+        >
+          Cricket Tap!
+        </h1>
+
+        <div class="mb-6 w-full max-w-xs">
+          <label
+            for="playerName"
+            class="block text-xl font-semibold mb-3 text-center text-white"
+            >Enter Your Name:</label
+          >
+          <input
+            type="text"
+            id="playerName"
+            class="w-full text-center text-black"
+            placeholder="Player 1"
+          />
+        </div>
+
+        <button
+          id="startGameButton"
+          class="h-[50px] w-[200px] rounded-lg bg-blue-500"
+        >
+          Start Game
+        </button>
+        <button
+          id="viewLeaderboardButton"
+          class="h-[50px] w-[200px] rounded-lg bg-green-500 mt-4"
+        >
+          View Leaderboard
+        </button>
+      </div>
+
+      <div id="leaderboard-screen" class="game-screen hidden">
+        <h2 class="text-6xl font-extrabold mb-8 text-yellow-400 ui-text-shadow">
+          Leaderboard
+        </h2>
+        <ul id="global-leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg w-full max-w-md mb-8 overflow-y-auto max-h-64">
+          <li>Loading Global Leaderboard...</li>
+        </ul>
+        <h3 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">Daily Leaderboard</h3>
+        <ul id="daily-leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg w-full max-w-md overflow-y-auto max-h-64">
+          <li>Loading Daily Leaderboard...</li>
+        </ul>
+        <button
+          id="backToStartButton"
+          class="h-[50px] w-[200px] rounded-lg bg-blue-500 mt-8"
+        >
+          Back to Start
+        </button>
+      </div>
+
+      <div id="game-container" class="hidden"></div>
+
+      <div id="game-ui" class="hidden">
+        <div class="row-top">
+          <span id="runs-display" class="ui-text-shadow">Runs: 0</span>
+          <span id="ball-type-display" class="ui-text-shadow"
+            >Ball: Normal</span
+          >
+        </div>
+        <div>
+          <span id="outs-display" class="ui-text-shadow">Outs: 0/3</span>
+        </div>
+      </div>
+
+      <div id="game-over-screen" class="game-screen hidden">
+        <h2 class="text-6xl font-extrabold mb-8 text-red-500 ui-text-shadow">
+          GAME OVER!
+        </h2>
+        <p class="score-display text-4xl mb-6 ui-text-shadow">
+          You Scored:
+          <span id="finalScore" class="font-extrabold text-yellow-400">0</span>
+          Runs
+        </p>
+        <p class="outs-display text-3xl mb-10 ui-text-shadow">
+          Outs:
+          <span id="finalOuts" class="font-extrabold text-red-400">3/3</span>
+        </p>
+        <button id="restartGameButton" class="h-[50px] w-[200px] rounded-lg bg-blue-500" >Play Again</button>
+        <button id="shareScoreButton" class="h-[50px] w-[200px] rounded-lg bg-green-500 mt-4">Challenge Friends!</button>
+
+        <div class="mt-8 w-full max-w-md">
+          <h3 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">Leaderboard</h3>
+          <ul id="leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg">
+            <li>Loading Leaderboard...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+    <script>
+      function setVhProperty() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty("--vh", `${vh}px`);
+      }
+
+      setVhProperty();
+      window.addEventListener("resize", setVhProperty);
+      window.addEventListener("orientationchange", setVhProperty);
+
+      let playerName = "";
+
+      let ball;
+      let bat;
+      let feedbackText;
+
+      let ballIsMoving = false;
+      let ballCurrentDepth = 0;
+      let ballSpeedZ = 0; // This will now be set randomly
+      let gameActive = false;
+      let currentRuns = 0;
+      let currentOuts = 0;
+      const maxOuts = 3;
+      // No longer storing 'currentBallType' as a key here, use description
+      // let currentBallType = "normal"; 
+      let inputEnabled = false;
+
+      // Variables to store the actual properties of the current ball, set by bowlBall
+      let currentBallSpeedZ = 0;
+      let currentBallStartYOffset = 0;
+      let currentBallTargetYOffset = 0;
+      let currentBallHorizontalDev = 0; // Corrected variable name
+      let currentBallBounceFactor = 0;
+      let currentBallDescription = "";
+      let currentBallScore = 0; // Added for scoring
+
+      let cheerSynth;
+      let booNoise;
+
+      let hitWindowOpen = false;
+
+      // Ball Trajectory Constants - Tuned for 1080x1920 resolution
+      const BALL_INITIAL_Y = 0.35;
+      const BALL_INITIAL_SCALE = 0.05;
+      const BALL_MAX_DEPTH = 300;
+      const BALL_FINAL_Y_RELATIVE = 1.35;
+      const BALL_FINAL_SCALE = 0.65;
+
+      // Hit Window - crucial for hit detection
+      const HIT_DEPTH_START = 130;
+      const HIT_DEPTH_END = 170;
+
+      // --- MODIFIED: Ball Types with Min/Max Ranges for Randomness ---
+      const ballTypes = {
+        normal: {
+          speedZ: { min: 70, max: 90 }, // Slightly varied speed
+          startYOffset: { min: -10, max: 10 }, // Slight variation in starting height
+          targetYOffset: { min: -10, max: 10 }, // Slight variation in ending height
+          horizontalDev: { min: 0, max: 5 }, // Very little horizontal deviation for normal
+          bounceFactor: { min: 0.9, max: 1.1 }, // Slight bounce variation
+          description: "Normal Ball",
+          score: 1, // Base score for normal
+        },
+        fast: {
+          speedZ: { min: 120, max: 240 }, // Faster, with some variation
+          startYOffset: { min: -30, max: -10 }, // Lower start
+          targetYOffset: { min: -20, max: 0 }, // Lower end
+          horizontalDev: { min: 5, max: 15 }, // Some horizontal deviation
+          bounceFactor: { min: 1.1, max: 3.6 }, // Slightly more bounce
+          description: "Fast Ball",
+          score: 2, // Base score for fast
+        },
+        yorker: {
+          speedZ: { min: 120, max: 190 }, // Moderate speed
+          startYOffset: { min: 30, max: 50 }, // Higher start
+          targetYOffset: { min: 110, max: 130 }, // Much higher end (closer to bat for yorker)
+          horizontalDev: { min: 0, max: 3 }, // Very little horizontal deviation for yorker
+          bounceFactor: { min: 1.4, max: 4.9 }, // Very low bounce (skiddy)
+          description: "Yorker Ball",
+          score: 4, // Base score for yorker
+        },
+        spin: {
+          speedZ: { min: 100, max: 180 }, // Slower speed
+          startYOffset: { min: 20, max: 40 }, // Higher start
+          targetYOffset: { min: 50, max: 70 }, // Higher end
+          horizontalDev: { min: 100, max: 170 }, // Significant horizontal deviation
+          bounceFactor: { min: 1.4, max: 2 }, // Higher bounce
+          description: "Spin Ball",
+          score: 3, // Base score for spin
+        },
+      };
+
+      let runsDisplayText;
+      let outsDisplayText;
+      let ballTypeDisplayText;
+
+      const config = {
+        type: Phaser.AUTO,
+        width: 1080,
+        height: 1920,
+        parent: "game-container",
+        physics: {
+          default: "arcade",
+          arcade: {
+            debug: false,
+          },
+        },
+        scene: {
+          preload: preload,
+          create: create,
+          update: update,
+        },
+        scale: {
+          mode: Phaser.Scale.ENVELOP,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+          parent: "game-container",
+          width: 1080,
+          height: 1920,
+        },
+      };
+
+      let game;
+      let currentScene;
+
+      const startScreen = document.getElementById("start-screen");
+      const gameContainer = document.getElementById("game-container");
+      const gameUI = document.getElementById("game-ui");
+      const playerNameInput = document.getElementById("playerName");
+      const startGameButton = document.getElementById("startGameButton");
+      const gameOverScreen = document.getElementById("game-over-screen");
+      const finalScoreText = document.getElementById("finalScore");
+      const finalOutsText = document.getElementById("finalOuts");
+      const restartGameButton = document.getElementById("restartGameButton");
+      const shareScoreButton = document.getElementById("shareScoreButton");
+      const viewLeaderboardButton = document.getElementById("viewLeaderboardButton");
+      const leaderboardScreen = document.getElementById("leaderboard-screen");
+      const backToStartButton = document.getElementById("backToStartButton");
+
+      runsDisplayText = document.getElementById("runs-display");
+      outsDisplayText = document.getElementById("outs-display");
+      ballTypeDisplayText = document.getElementById("ball-type-display");
+
+      startGameButton.addEventListener("click", async () => {
+        const savedGameState = JSON.parse(localStorage.getItem('tapCricketGameState'));
+        if (savedGameState) {
+          currentRuns = savedGameState.currentRuns;
+          currentOuts = savedGameState.currentOuts;
+        } else {
+          currentRuns = 0;
+          currentOuts = 0;
+        }
+
+        playerName = playerNameInput.value.trim();
+        if (playerName === "") {
+          alert("Please enter your name to start the game!");
+          return; // Prevent game from starting
+        }
+
+        ballIsMoving = false;
+        gameActive = false;
+        hitWindowOpen = false;
+        inputEnabled = false;
+
+        try {
+          await Tone.start();
+        } catch (e) {
+          console.error("Failed to start Tone.js audio context:", e);
+        }
+
+        startScreen.classList.add("hidden");
+        gameContainer.classList.remove("hidden");
+        gameUI.classList.remove("hidden");
+        gameOverScreen.classList.add("hidden");
+
+        if (game) {
+          game.destroy(true);
+        }
+        game = new Phaser.Game(config);
+
+        game.events.on("ready", () => {
+          currentScene = game.scene.scenes[0];
+        });
+      });
+
+      document.addEventListener('DOMContentLoaded', () => { 
+        window.displayLeaderboard("global-leaderboard-list");
+      });
+
+      restartGameButton.addEventListener("click", () => {
+        startGameButton.click();
+      });
+
+      shareScoreButton.addEventListener("click", async () => {
+        const score = currentRuns;
+        const text = `🔥 I scored ${score} runs in Cricket Tap! Think you can beat me? 🏏`;
+        const url = window.location.href;
+
+        if (navigator.share) {
+          try {
+             navigator.share({
+              title: 'Cricket Tap! High Score',
+              text: text,
+              url: url,
+            });
+            console.log('Successful share');
+          } catch (error) {
+            console.log('Error sharing or share not supported, falling back to clipboard:', error);
+            // Fallback for when navigator.share() fails or is not supported
+            navigator.clipboard.writeText(`${text} ${url}`);
+            alert("Score and link copied to clipboard! Share it with your friends.");
+          }
+        } else {
+          // Fallback for browsers that don't support navigator.share at all
+          navigator.clipboard.writeText(`${text} ${url}`);
+          alert("Score and link copied to clipboard! Share it with your friends.");
+        }
+      });
+
+      viewLeaderboardButton.addEventListener("click", () => {
+        startScreen.classList.add("hidden");
+        leaderboardScreen.classList.remove("hidden");
+        window.displayLeaderboard("global-leaderboard-list");
+        window.displayLeaderboard("daily-leaderboard-list", true);
+      });
+
+      backToStartButton.addEventListener("click", () => {
+        leaderboardScreen.classList.add("hidden");
+        startScreen.classList.remove("hidden");
+        window.displayLeaderboard("global-leaderboard-list"); // Refresh global leaderboard
+      });
+
+      let background;
+
+      function preload() {
+        this.load.image("background_pitch", "./assets/background_pitch.png");
+        this.load.image("ball", "./assets/ball.png");
+        this.load.image('bat', './assets/bat.png');
+      }
+
+      function create() {
+        currentScene = this;
+
+        cheerSynth = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: "triangle" },
+          envelope: { releaseCurve: "exponential", release: 0.2 },
+        }).toDestination();
+        booNoise = new Tone.NoiseSynth({
+          noise: { type: "white" },
+          envelope: { attack: 0.005, decay: 0.2, sustain: 0.05, release: 0.2 },
+        }).toDestination();
+
+        background = this.add.image(0, 0, "background_pitch").setOrigin(0);
+
+        const canvasWidth = this.sys.game.canvas.width;
+        const canvasHeight = this.sys.game.canvas.height;
+        const bgImageWidth = background.width;
+        const bgImageHeight = background.height;
+
+        const scaleX = canvasWidth / bgImageWidth;
+        const scaleY = canvasHeight / bgImageHeight;
+        const scale = Math.max(scaleX, scaleY);
+
+        background.setScale(scale);
+        background.x = (canvasWidth - background.displayWidth) / 2;
+        background.y = (canvasHeight - background.displayHeight) / 2;
+
+        ball = this.physics.add.sprite(
+          config.width / 2,
+          config.height * BALL_INITIAL_Y,
+          "ball"
+        );
+        ball.setOrigin(0.5);
+        ball.setScale(BALL_INITIAL_SCALE);
+        ball.body.setCircle(ball.width / 2);
+        ball.body.setAllowGravity(false);
+        ball.setVisible(false);
+        ball.body.setCollideWorldBounds(false);
+
+        bat = this.add.sprite(config.width / 2, config.height * 0.75, 'bat'); // Repositioned bat to be visible on screen
+        bat.setOrigin(0.5, 0); // Set pivot to the very top of the handle
+        bat.setScale(1);
+
+        feedbackText = this.add
+          .text(
+            this.cameras.main.displayWidth / 2,
+            this.cameras.main.displayHeight / 2 -
+              this.cameras.main.displayHeight * 0.08,
+            "",
+            {
+              fontSize: `${this.cameras.main.displayHeight * 0.08}px`,
+              fill: "#FFF",
+              stroke: "#000",
+              strokeThickness: 8,
+              fontStyle: "bolder",
+              fontFamily: "Fredoka One, cursive",
+            }
+          )
+          .setOrigin(0.5)
+          .setDepth(100);
+        feedbackText.setVisible(false);
+        feedbackText.setScrollFactor(0);
+
+        gameActive = true;
+        updateUI();
+        bowlBall();
+      }
+
+      function update(time, delta) {
+        if (!gameActive) {
+          return;
+        }
+
+        if (ballIsMoving && ball) {
+          // Use currentBallSpeedZ which is set randomly per ball
+          ballCurrentDepth += currentBallSpeedZ * (delta / 1000);
+
+          const minDepth = 0;
+          let progress =
+            (ballCurrentDepth - minDepth) / (BALL_MAX_DEPTH - minDepth);
+          progress = Phaser.Math.Clamp(progress, 0, 1);
+
+          const newScale = Phaser.Math.Linear(
+            BALL_INITIAL_SCALE,
+            BALL_FINAL_SCALE,
+            progress
+          );
+          ball.setScale(newScale);
+
+          // Use currentBallStartYOffset and currentBallTargetYOffset
+          let finalStartY =
+            config.height * BALL_INITIAL_Y + currentBallStartYOffset;
+          let finalTargetY =
+            config.height * BALL_FINAL_Y_RELATIVE + currentBallTargetYOffset;
+
+          let ballY = Phaser.Math.Linear(finalStartY, finalTargetY, progress);
+
+          // Use currentBallBounceFactor
+          const universalBounceHeight = 40 * currentBallBounceFactor;
+          ballY -= Math.sin(progress * Math.PI) * universalBounceHeight;
+
+          let ballX = config.width / 2;
+          // Use currentBallHorizontalDev - FIXED TYPO HERE!
+          if (currentBallHorizontalDev > 0) {
+            const devMagnitude = currentBallHorizontalDev * progress;
+            ballX +=
+              Math.sin(ballCurrentDepth * 0.15 + currentBallDescription.length * 0.5) * // Used currentBallDescription here as currentBallType is no longer key
+              devMagnitude;
+          }
+
+          ball.x = ballX;
+          ball.y = ballY;
+
+          if (
+            ballCurrentDepth >= HIT_DEPTH_START &&
+            ballCurrentDepth <= HIT_DEPTH_END
+          ) {
+            hitWindowOpen = true;
+          } else {
+            if (
+              hitWindowOpen &&
+              ballIsMoving &&
+              ballCurrentDepth > HIT_DEPTH_END
+            ) {
+              hitWindowOpen = false;
+              handleBallMiss();
+            }
+          }
+
+          if (ballCurrentDepth >= BALL_MAX_DEPTH) {
+            if (ballIsMoving) {
+              handleBallMiss();
+            }
+            ball.setVisible(false);
+            ballIsMoving = false;
+          }
+        }
+      }
+
+      function bowlBall() {
+        if (!gameActive || !ball) {
+          return;
+        }
+
+        const types = Object.keys(ballTypes);
+        const randomBallTypeKey = types[Phaser.Math.Between(0, types.length - 1)];
+        const ballPropsDefinition = ballTypes[randomBallTypeKey]; // Get the definition with min/max ranges
+
+        // --- NEW: Generate random properties for the current ball ---
+        currentBallSpeedZ = Phaser.Math.Between(ballPropsDefinition.speedZ.min, ballPropsDefinition.speedZ.max);
+        currentBallStartYOffset = Phaser.Math.Between(ballPropsDefinition.startYOffset.min, ballPropsDefinition.startYOffset.max);
+        currentBallTargetYOffset = Phaser.Math.Between(ballPropsDefinition.targetYOffset.min, ballPropsDefinition.targetYOffset.max);
+        currentBallHorizontalDev = Phaser.Math.Between(ballPropsDefinition.horizontalDev.min, ballPropsDefinition.horizontalDev.max);
+        // For bounceFactor, use floating point numbers with Phaser.Math.FloatBetween
+        currentBallBounceFactor = Phaser.Math.FloatBetween(ballPropsDefinition.bounceFactor.min, ballPropsDefinition.bounceFactor.max);
+        currentBallDescription = ballPropsDefinition.description;
+        currentBallScore = ballPropsDefinition.score; // Store the base score
+
+        ballIsMoving = true;
+        hitWindowOpen = false;
+        inputEnabled = true;
+
+        ball.setVisible(true);
+        ballCurrentDepth = 0;
+        // ballSpeedZ is now set to currentBallSpeedZ which is random
+        ballSpeedZ = currentBallSpeedZ; // Use the generated random speed
+
+        ball.body.setVelocityX(0);
+        ball.body.setVelocityY(0);
+
+        ballTypeDisplayText.textContent = `Ball: ${currentBallDescription}`; // Use the descriptive name
+        feedbackText.setVisible(false);
+
+        bat.setAngle(0); // Ensure bat is in idle position before new ball
+        currentScene.input.once("pointerdown", handleHitAttempt, currentScene);
+      }
+
+      function handleHitAttempt() {
+        if (!inputEnabled || !ballIsMoving || !gameActive || !ball) {
+          return;
+        }
+        inputEnabled = false;
+
+        // --- CTO's Realistic Bat Swing Animation (Revised for Compatibility & Visible Z-Axis) ---
+        // 1. Backswing
+        currentScene.tweens.add({
+            targets: bat,
+            angle: 20,
+            ease: 'Power1',
+            duration: 50,
+            onComplete: () => {
+                // 2. Forward Swing with a more pronounced Z-axis simulation
+                currentScene.tweens.add({
+                    targets: bat,
+                    angle: -180,
+                    scale: 0.75, // Bat "pops" forward
+                    ease: 'Power2',
+                    duration: 100,
+                    onComplete: () => {
+                        // 3. Follow-through
+                        currentScene.tweens.add({
+                            targets: bat,
+                            angle: 0,
+                            scale: 1, // Return to original size
+                            ease: 'Cubic.easeOut',
+                            duration: 100,
+                            onComplete: () => {
+                                bat.setAngle(0); // Final reset
+                                bat.setScale(1); // Ensure scale is perfectly reset
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        if (
+          ballCurrentDepth >= HIT_DEPTH_START &&
+          ballCurrentDepth <= HIT_DEPTH_END
+        ) {
+          if (cheerSynth) {
+            cheerSynth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+          }
+
+          showFeedback("HIT!", "#00FF00");
+
+          // Use the randomly assigned score for the current ball
+          currentRuns += currentBallScore; 
+          updateUI();
+          ballIsMoving = false;
+          ball.setVisible(false);
+          resetBallAndBowlNext();
+        } else {
+          if (booNoise) {
+            booNoise.triggerAttackRelease("4n", Tone.now(), 0.5);
+          }
+          showFeedback("MISS!", "#FF0000");
+          ballIsMoving = false;
+          playerOut();
+        }
+      }
+
+      function handleBallMiss() {
+        if (ballIsMoving && gameActive) {
+          showFeedback("OUT!", "#FFFF00");
+          if (booNoise) {
+            booNoise.triggerAttackRelease("4n", Tone.now(), 0.5);
+          }
+        }
+        ballIsMoving = false;
+        inputEnabled = false;
+        playerOut();
+      }
+
+      function playerOut() {
+        if (!gameActive) {
+          return;
+        }
+
+        currentOuts += 1;
+        updateUI();
+
+        if (currentOuts >= maxOuts) {
+          endGame();
+        } else {
+          currentScene.time.delayedCall(
+            1000,
+            resetBallAndBowlNext,
+            [],
+            currentScene
+          );
+        }
+      }
+
+      function showFeedback(message, color) {
+        if (feedbackText && currentScene) {
+          feedbackText.setText(message);
+          feedbackText.setColor(color);
+          feedbackText.setVisible(true);
+          feedbackText.setAlpha(1);
+
+          const viewportHeightPixels = currentScene.cameras.main.displayHeight;
+          feedbackText.y =
+            viewportHeightPixels / 2 - viewportHeightPixels * 0.08;
+
+          currentScene.tweens.add({
+            targets: feedbackText,
+            alpha: { from: 1, to: 0 },
+            y: {
+              from: feedbackText.y,
+              to: feedbackText.y - viewportHeightPixels * 0.08,
+            },
+            ease: "Power1",
+            duration: 750,
+            onComplete: () => {
+              feedbackText.setVisible(false);
+            },
+          });
+        }
+      }
+
+      function resetBallAndBowlNext() {
+        if (ball) {
+          ball.body.setVelocityX(0);
+          ball.body.setVelocityY(0);
+          ball.setVisible(false);
+          ball.setScale(BALL_INITIAL_SCALE);
+          ballCurrentDepth = 0;
+          ballSpeedZ = 0;
+          ball.x = config.width / 2;
+          ball.y = config.height * BALL_INITIAL_Y;
+        }
+        if (bat) {
+          bat.setAngle(0); // Reset bat to initial angle
+        }
+        ballIsMoving = false;
+        hitWindowOpen = false;
+        inputEnabled = false;
+
+        if (gameActive) {
+          currentScene.time.delayedCall(1000, bowlBall, [], currentScene);
+        }
+      }
+
+      function updateUI() {
+        if (runsDisplayText) {
+          runsDisplayText.textContent = `Runs: ${currentRuns}`;
+        }
+        if (outsDisplayText) {
+          outsDisplayText.textContent = `Outs: ${currentOuts}/${maxOuts}`;
+        }
+        localStorage.setItem('tapCricketGameState', JSON.stringify({ currentRuns, currentOuts }));
+      }
+
+      function endGame() {
+        gameActive = false;
+        ballIsMoving = false;
+        inputEnabled = false;
+
+        if (ball) {
+          ball.setVisible(false);
+          if (ball.body) {
+            ball.body.setVelocityX(0);
+            ball.body.setVelocityY(0);
+          }
+        }
+        if (feedbackText) {
+          feedbackText.setVisible(false);
+        }
+
+        gameContainer.classList.add("hidden");
+        gameUI.classList.add("hidden");
+        gameOverScreen.classList.remove("hidden");
+
+        finalScoreText.textContent = currentRuns;
+        finalOutsText.textContent = `${currentOuts}/${maxOuts}`;
+
+        // Save score to Firebase
+        window.saveScore(playerName, currentRuns);
+        window.displayLeaderboard("leaderboard-list");
+        localStorage.removeItem('tapCricketGameState');
+      }
+
+      
+
+      
+    </script>
+  </body>
+</html>
