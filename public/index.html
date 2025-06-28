@@ -937,19 +937,27 @@
         }
         inputEnabled = false;
 
-        // --- CTO's Realistic Bat Swing Animation (Revised for Compatibility & Visible Z-Axis) ---
+        const initialX = config.width / 2;
+        const initialY = config.height * 0.75;
+
+        // --- CTO's Realistic Bat Swing Animation (with 3D Arc) ---
         // 1. Backswing
         currentScene.tweens.add({
             targets: bat,
             angle: 20,
+            x: initialX + 15,
+            y: initialY - 10,
+            scale: 0.95,
             ease: 'Power1',
             duration: 50,
             onComplete: () => {
-                // 2. Forward Swing with a more pronounced Z-axis simulation
+                // 2. Forward Swing
                 currentScene.tweens.add({
                     targets: bat,
                     angle: -180,
-                    scale: 0.75, // Bat "pops" forward
+                    x: initialX - 200,
+                    y: initialY - 120,
+                    scale: 0.75,
                     ease: 'Power2',
                     duration: 100,
                     onComplete: () => {
@@ -957,12 +965,15 @@
                         currentScene.tweens.add({
                             targets: bat,
                             angle: 0,
-                            scale: 1, // Return to original size
+                            x: initialX,
+                            y: initialY,
+                            scale: 1,
                             ease: 'Cubic.easeOut',
-                            duration: 100,
+                            duration: 110,
                             onComplete: () => {
-                                bat.setAngle(0); // Final reset
-                                bat.setScale(1); // Ensure scale is perfectly reset
+                                bat.setPosition(initialX, initialY);
+                                bat.setAngle(0);
+                                bat.setScale(1);
                             }
                         });
                     }
