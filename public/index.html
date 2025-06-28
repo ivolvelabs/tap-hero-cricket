@@ -3,7 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cricket Tap!</title>
+    <title>Cricket Tap! - Hit Sixes, Top the Leaderboard!</title>
+    <meta name="description" content="Experience the thrill of cricket with Cricket Tap! Tap to hit, score big, and challenge your friends for the top spot on the global leaderboard. Play now!" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tap-hero-cricket.web.app/" />
+    <meta property="og:title" content="Cricket Tap! - Hit Sixes, Top the Leaderboard!" />
+    <meta property="og:description" content="Experience the thrill of cricket with Cricket Tap! Tap to hit, score big, and challenge your friends for the top spot on the global leaderboard. Play now!" />
+    <meta property="og:image" content="https://tap-hero-cricket.web.app/assets/social_share_image.png" /> <!-- TODO: Create and replace with a compelling image -->
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://tap-hero-cricket.web.app/" />
+    <meta property="twitter:title" content="Cricket Tap! - Hit Sixes, Top the Leaderboard!" />
+    <meta property="twitter:description" content="Experience the thrill of cricket with Cricket Tap! Tap to hit, score big, and challenge your friends for the top spot on the global leaderboard. Play now!" />
+    <meta property="twitter:image" content="https://tap-hero-cricket.web.app/assets/social_share_image.png" /> <!-- TODO: Create and replace with a compelling image -->
+
+    <!-- Google Analytics 4 (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LQX0NZTWT5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LQX0NZTWT5');
+    </script>
+
+    <!-- Google AdSense for Games -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415094295542933"
+     crossorigin="anonymous"></script>
+    <!-- H5 Ad Placement API -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5415094295542933"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <!-- Firebase SDKs -->
@@ -524,6 +554,11 @@
       setVhProperty();
       window.addEventListener("resize", setVhProperty);
       window.addEventListener("orientationchange", setVhProperty);
+
+      // Initialize AdSense for Games H5 Ad Placement API
+      if (typeof adConfig !== "undefined") {
+        adConfig({ "client": "ca-pub-5415094295542933" });
+      }
 
       let playerName = "";
 
@@ -1126,6 +1161,11 @@
         window.saveScore(playerName, currentRuns);
         window.displayLeaderboard("leaderboard-list");
         localStorage.removeItem('tapCricketGameState');
+
+        // Show interstitial ad
+        if (typeof adBreak !== "undefined") {
+          adBreak({ type: 'next' });
+        }
       }
 
       
