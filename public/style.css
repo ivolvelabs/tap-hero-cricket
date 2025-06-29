@@ -161,36 +161,40 @@ button {
   font-size: 1.5rem;
   padding: 1rem 2rem;
   border-radius: 50px; /* Pill shape */
-  border: none;
+  border: none; /* Remove border for cleaner look with new shadow */
   cursor: pointer;
-  color: white;
+  color: white; /* Default to white, overridden for secondary */
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.3);
-  transition: all 0.15s ease-in-out;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), inset 0 -5px 0 rgba(0,0,0,0.3); /* Deeper shadow */
+  transition: all 0.2s ease-in-out;
   -webkit-tap-highlight-color: transparent;
 }
 
 button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 12px rgba(0, 0, 0, 0.45), inset 0 -4px 0 rgba(0,0,0,0.3);
+  transform: translateY(-4px); /* More pronounced lift */
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7), inset 0 -6px 0 rgba(0,0,0,0.4); /* Deeper shadow on hover */
 }
 
 button:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0,0,0,0.3);
+  transform: translateY(0px); /* Press down effect */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0,0,0,0.2); /* Pressed shadow */
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, var(--primary-green) 0%, var(--dark-green) 100%);
+  background: linear-gradient(180deg, #76FF03 0%, #33691E 100%); /* More vibrant green */
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Text shadow for better readability */
 }
 
 .btn-secondary {
-  background: linear-gradient(180deg, var(--primary-yellow) 0%, #d39e00 100%);
+  background: linear-gradient(180deg, #FFEB3B 0%, #F57F17 100%); /* More vibrant yellow */
+  color: #333; /* Darker text for maximum contrast */
+  text-shadow: 1px 1px 2px rgba(255,255,255,0.3); /* Subtle text shadow for dark text */
 }
 
 .btn-tertiary {
-    background: linear-gradient(180deg, var(--light-blue) 0%, var(--medium-blue) 100%);
+    background: linear-gradient(180deg, #607D8B 0%, #455A64 100%); /* Darker, more distinct grey */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Text shadow for better readability */
 }
 
 
@@ -327,4 +331,27 @@ canvas {
 
 #game-container.hidden {
     display: none;
+}
+
+/* Footer Styling */
+.main-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 20; /* Ensure it's above other elements */
+}
+
+.main-footer a {
+  color: var(--text-light);
+  text-decoration: none;
+  margin: 0 1rem;
+  font-size: 0.9rem;
+}
+
+.main-footer a:hover {
+  text-decoration: underline;
 }
