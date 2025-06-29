@@ -1,0 +1,330 @@
+/*
+  General Reset & Root Variables
+*/
+:root {
+  --primary-green: #4CAF50;
+  --dark-green: #2e8b57;
+  --primary-yellow: #FFC107;
+  --dark-blue: #1a202c;
+  --medium-blue: #2d3748;
+  --light-blue: #4a5568;
+  --text-light: #f7fafc;
+  --text-dark: #e2e8f0;
+  --font-primary: "Fredoka One", cursive;
+  --font-secondary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-secondary);
+  background: linear-gradient(180deg, var(--dark-blue) 0%, #000000 100%);
+  color: var(--text-light);
+  overflow: hidden; /* Prevent body scroll */
+}
+
+/*
+  Main Layout & Wrapper
+*/
+#main-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 480px; /* Mobile-first max-width */
+  margin: 0 auto;
+  background-color: var(--medium-blue);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  border: 3px solid var(--primary-green);
+  z-index: 0;
+}
+
+/* Use a pseudo-element for the background to avoid overflow:hidden on the wrapper */
+#main-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('./assets/background_pitch.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 17px; /* Slightly smaller than the wrapper's radius */
+  z-index: -1;
+}
+
+/*
+  Game Screens (The overlays: Start, Game Over, Leaderboard)
+*/
+.game-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Content starts from the top */
+  align-items: center;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(26, 32, 44, 0.95) 0%, rgba(26, 32, 44, 0.85) 100%);
+  backdrop-filter: blur(5px);
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+  text-align: center;
+  overflow-y: auto; /* Enable vertical scrolling for content */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.game-screen.hidden {
+  display: none !important;
+}
+
+/*
+  UI Elements & Components
+*/
+.ui-text-shadow {
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.8);
+}
+
+.logo-image {
+    width: 70%;
+    max-width: 280px;
+    margin-bottom: 1rem;
+}
+
+/* Banner Styling */
+.hero-banner {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+  border: 3px solid var(--primary-yellow);
+}
+
+/* Input Field Styling */
+.input-group {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  display: block;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  color: var(--primary-yellow);
+  margin-bottom: 0.75rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.input-group input[type="text"] {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background-color: var(--light-blue);
+  border: 2px solid var(--primary-green);
+  border-radius: 10px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.input-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-yellow);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+}
+
+/* Button Styling */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 2rem;
+}
+
+button {
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  padding: 1rem 2rem;
+  border-radius: 50px; /* Pill shape */
+  border: none;
+  cursor: pointer;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5), inset 0 -4px 0 rgba(0,0,0,0.3);
+  transition: all 0.15s ease-in-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 12px rgba(0, 0, 0, 0.45), inset 0 -4px 0 rgba(0,0,0,0.3);
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0,0,0,0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--primary-green) 0%, var(--dark-green) 100%);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, var(--primary-yellow) 0%, #d39e00 100%);
+}
+
+.btn-tertiary {
+    background: linear-gradient(180deg, var(--light-blue) 0%, var(--medium-blue) 100%);
+}
+
+
+/* Content Sections (About, Leaderboard List) */
+.content-box {
+  width: 100%;
+  max-width: 400px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid var(--light-blue);
+}
+
+.content-box h2, .content-box h3 {
+  font-family: var(--font-primary);
+  color: var(--primary-yellow);
+  margin-top: 0;
+}
+
+.content-box ul {
+  list-style-position: inside;
+  padding-left: 0;
+  text-align: left;
+}
+
+/* Leaderboard Specifics */
+#leaderboard-screen h2 {
+    font-size: 3rem;
+    font-family: var(--font-primary);
+    color: var(--primary-yellow);
+}
+
+.leaderboard-list {
+  width: 100%;
+  max-width: 400px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--primary-green);
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.leaderboard-list li {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--light-blue);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.leaderboard-list li:last-child {
+  border-bottom: none;
+}
+
+/* Game Over Screen */
+#game-over-screen .title {
+    font-family: var(--font-primary);
+    font-size: 2rem;
+    color: var(--primary-yellow);
+    margin-bottom: 0.5rem;
+}
+
+#game-over-screen .game-over-text {
+  font-family: var(--font-primary);
+  font-size: 3.5rem;
+  color: #f44336;
+  margin-bottom: 1rem;
+}
+
+#game-over-screen .score-display {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+#game-over-screen .score-display span {
+  color: var(--primary-yellow);
+  font-size: 2.5rem;
+  font-family: var(--font-primary);
+}
+
+
+/*
+  In-Game UI (Runs, Outs)
+*/
+#game-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#game-ui .row-top {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+#runs-display, #outs-display, #ball-type-display {
+  font-family: var(--font-primary);
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
+  font-size: 32px;
+  line-height: 1.2;
+  padding: 5px;
+  white-space: nowrap;
+}
+
+#outs-display {
+  color: #ff7043;
+}
+
+#ball-type-display {
+  text-align: right;
+  color: #add8e6;
+}
+
+/*
+  Canvas & Phaser
+*/
+canvas {
+  display: block;
+}
+
+#game-container.hidden {
+    display: none;
+}

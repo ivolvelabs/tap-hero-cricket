@@ -165,6 +165,7 @@
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             const listItem = document.createElement("li");
+            listItem.className = "py-2 border-b border-gray-700 last:border-b-0";
             listItem.textContent = `${data.playerName}: ${data.score}`;
             leaderboardList.appendChild(listItem);
           });
@@ -182,341 +183,57 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap"
       rel="stylesheet"
     />
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        font-family: "Fredoka One", cursive;
-        background-color: #1a202c;
-        color: #ffffff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      #main-wrapper {
-        position: relative;
-        width: 100vw;
-        height: calc(var(--vh, 1vh) * 100);
-        border: none;
-        border-radius: 0;
-        box-shadow: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-sizing: border-box;
-        background-color: #2d3748;
-        background-image: url('./assets/background_pitch.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-
-      @media (min-width: 769px) {
-        #main-wrapper {
-          max-width: 800px;
-          max-height: 600px;
-          height: 100%;
-          border: 4px solid #4caf50;
-          border-radius: 20px;
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-        }
-      }
-
-      canvas {
-        display: block;
-      }
-
-      .game-screen {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 10;
-        backdrop-filter: blur(8px);
-        background-color: rgba(26, 32, 44, 0.7);
-        padding: 20px;
-        box-sizing: border-box;
-        text-align: center;
-        border-radius: 0;
-      }
-
-      @media (min-width: 769px) {
-        .game-screen {
-          border-radius: 20px;
-        }
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      input[type="text"] {
-        @apply px-4 py-3 rounded-lg bg-gray-800 text-black border-2 border-green-500 focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-600 shadow-lg transition-all duration-300;
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-
-      /* Retaining your button styles */
-      button {
-        @apply px-8 py-4 rounded-full font-extrabold text-lg text-white transition-all duration-300 ease-in-out;
-        background: linear-gradient(145deg, #4caf50, #2e8b57);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
-        border: none;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-      }
-      button:hover {
-        background: linear-gradient(145deg, #2e8b57, #4caf50);
-        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6);
-        transform: translateY(-3px);
-      }
-      button:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        background: #2e8b57;
-      }
-
-      .ui-text-shadow {
-        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
-      }
-
-      @media (min-width: 769px) {
-        #start-screen h1 {
-          font-size: 4.5rem;
-          margin-bottom: 3.5rem;
-        }
-        #start-screen label {
-          font-size: 1.4rem;
-        }
-        #game-over-screen h2 {
-          font-size: 5.5rem;
-          margin-bottom: 2.5rem;
-        }
-        #game-over-screen .score-display {
-          font-size: 3rem;
-          margin-bottom: 2rem;
-        }
-        #game-over-screen .outs-display {
-          font-size: 2.5rem;
-          margin-bottom: 3.5rem;
-        }
-        button {
-          font-size: 1.5rem;
-          padding: 1.2rem 3rem;
-        }
-        input[type="text"] {
-          font-size: 1.2rem;
-          padding: 0.8rem 1.5rem;
-        }
-      }
-
-      @media (max-width: 768px) {
-        #start-screen h1 {
-          font-size: 3rem;
-          margin-bottom: 2.5rem;
-        }
-        #start-screen label {
-          font-size: 1.1rem;
-        }
-        #game-over-screen h2 {
-          font-size: 4rem;
-          margin-bottom: 2rem;
-        }
-        #game-over-screen .score-display {
-          font-size: 2.2rem;
-          margin-bottom: 1.5rem;
-        }
-        #game-over-screen .outs-display {
-          font-size: 1.8rem;
-          margin-bottom: 2.5rem;
-        }
-        button {
-          font-size: 1.125rem;
-          padding: 1rem 2rem;
-        }
-        input[type="text"] {
-          font-size: 1rem;
-          padding: 0.75rem;
-        }
-        .game-screen {
-          padding: 30px 20px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        #start-screen h1 {
-          font-size: 2.5rem;
-          margin-bottom: 2rem;
-        }
-        #start-screen label {
-          font-size: 1rem;
-        }
-        #game-over-screen h2 {
-          font-size: 3.2rem;
-          margin-bottom: 1.5rem;
-        }
-        #game-over-screen .score-display {
-          font-size: 1.8rem;
-          margin-bottom: 1rem;
-        }
-        #game-over-screen .outs-display {
-          font-size: 1.5rem;
-          margin-bottom: 2rem;
-        }
-        button {
-          font-size: 1rem;
-          padding: 0.8rem 1.8rem;
-        }
-        input[type="text"] {
-          font-size: 0.9rem;
-          padding: 0.6rem;
-        }
-        .game-screen {
-          padding: 20px 10px;
-        }
-        #start-screen .mb-6 {
-          margin-bottom: 1.5rem;
-        }
-      }
-
-      #game-ui {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 5;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: flex-start;
-        padding: 2.5vw;
-        box-sizing: border-box;
-      }
-
-      #game-ui .row-top {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        margin-bottom: 0.5vw;
-      }
-
-      #runs-display,
-      #outs-display,
-      #ball-type-display {
-        color: #fff;
-        font-weight: 800;
-        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
-        font-size: 5vw;
-        line-height: 1.2;
-        padding: 0.5vw;
-        white-space: nowrap;
-      }
-
-      #outs-display {
-        color: #ff7043;
-      }
-
-      #ball-type-display {
-        text-align: right;
-        color: #add8e6;
-      }
-
-      @media (min-width: 769px) {
-        #game-ui {
-          padding: 20px;
-        }
-        #game-ui .row-top {
-          margin-bottom: 5px;
-        }
-        #runs-display,
-        #outs-display,
-        #ball-type-display {
-          font-size: 32px;
-          padding: 5px;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div id="main-wrapper">
       <div id="start-screen" class="game-screen">
-        <h1
-            class="text-5xl font-extrabold mb-10 text-yellow-400 ui-text-shadow"
-          >
-            Tap Hero Cricket
-          </h1>
+        <img src="./assets/banner.png" alt="Tap Hero Cricket Banner" class="hero-banner">
 
-        <div class="mb-6 w-full max-w-xs">
+        <div class="input-group">
           <label
             for="playerName"
-            class="block text-xl font-semibold mb-3 text-center text-white"
             >Enter Your Name:</label
           >
           <input
             type="text"
             id="playerName"
-            class="w-full text-center text-black"
             placeholder="Player 1"
           />
         </div>
 
-        <button
-          id="startGameButton"
-          class="h-[50px] w-[200px] rounded-lg bg-blue-500 mb-4"
-        >
-          Start Game
-        </button>
-        <button
-          id="viewLeaderboardButton"
-          class="h-[50px] w-[200px] rounded-lg bg-green-500"
-        >
-          View Leaderboard
-        </button>
+        <div class="button-group">
+          <button id="startGameButton" class="btn-primary">Start Game</button>
+          <button id="viewLeaderboardButton" class="btn-secondary">View Leaderboard</button>
+        </div>
 
-        <div class="text-center text-white mt-8 max-w-md px-4 overflow-y-auto max-h-128">
-          <h2 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">About Cricket Tap!</h2>
-          <p class="text-lg mb-4">Welcome to Cricket Tap! Experience the ultimate cricket challenge where every tap counts. Hit massive sixes, master different ball types, and climb the global leaderboard!</p>
+        <div class="content-box">
+          <h2 class="ui-text-shadow">About Tap Hero Cricket!</h2>
+          <p>Welcome to Tap Hero Cricket! Experience the ultimate cricket challenge where every tap counts. Hit massive sixes, master different ball types, and climb the global leaderboard!</p>
           
-          <h3 class="text-2xl font-bold mb-3 text-green-400 ui-text-shadow">How to Play:</h3>
-          <ul class="list-disc list-inside text-left mx-auto mb-4">
-            <li class="mb-2">Tap anywhere on the screen when the ball is in the hitting zone.</li>
-            <li class="mb-2">Time your tap perfectly to score big!</li>
-            <li class="mb-2">Watch out for fast balls, yorkers, and spin deliveries – each requires precise timing.</li>
+          <h3 class="ui-text-shadow">How to Play:</h3>
+          <ul>
+            <li>Tap anywhere on the screen when the ball is in the hitting zone.</li>
+            <li>Time your tap perfectly to score big!</li>
+            <li>Watch out for fast balls, yorkers, and spin deliveries – each requires precise timing.</li>
             <li>Score as many runs as you can before getting three outs!</li>
           </ul>
-          <p class="text-md mt-4">Challenge your friends and see who can become the ultimate Cricket Tap champion!</p>
+          <p>Challenge your friends and see who can become the ultimate Tap Hero Cricket champion!</p>
         </div>
       </div>
 
       <div id="leaderboard-screen" class="game-screen hidden">
-        <h2 class="text-6xl font-extrabold mb-8 text-yellow-400 ui-text-shadow">
-          Leaderboard
-        </h2>
-        <ul id="global-leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg w-full max-w-md mb-8 overflow-y-auto max-h-64">
+        <h2 class="ui-text-shadow">Leaderboard</h2>
+        <ul id="global-leaderboard-list" class="leaderboard-list">
           <li>Loading Global Leaderboard...</li>
         </ul>
-        <h3 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">Daily Leaderboard</h3>
-        <ul id="daily-leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg w-full max-w-md overflow-y-auto max-h-64">
+        <h3 class="ui-text-shadow">Daily Leaderboard</h3>
+        <ul id="daily-leaderboard-list" class="leaderboard-list">
           <li>Loading Daily Leaderboard...</li>
         </ul>
-        <button
-          id="backToStartButton"
-          class="h-[50px] w-[200px] rounded-lg bg-blue-500 mt-8"
-        >
-          Back to Start
-        </button>
+        <div class="button-group" style="margin-top: 2rem;">
+            <button id="backToStartButton" class="btn-tertiary">Back to Start</button>
+        </div>
       </div>
 
       <div id="game-container" class="hidden"></div>
@@ -534,24 +251,27 @@
       </div>
 
       <div id="game-over-screen" class="game-screen hidden">
-        <h2 class="text-6xl font-extrabold mb-8 text-red-500 ui-text-shadow">
-          GAME OVER!
-        </h2>
-        <p class="score-display text-4xl mb-6 ui-text-shadow">
+        <h2 class="ui-text-shadow">GAME OVER!</h2>
+        <p class="score-display">
           You Scored:
-          <span id="finalScore" class="font-extrabold text-yellow-400">0</span>
+          <span id="finalScore">0</span>
           Runs
         </p>
-        <p class="outs-display text-3xl mb-10 ui-text-shadow">
+        <p class="outs-display">
           Outs:
-          <span id="finalOuts" class="font-extrabold text-red-400">3/3</span>
+          <span id="finalOuts">3/3</span>
         </p>
-        <button id="restartGameButton" class="h-[50px] w-[200px] rounded-lg bg-blue-500" >Play Again</button>
-        <button id="shareScoreButton" class="h-[50px] w-[200px] rounded-lg bg-green-500 mt-4">Challenge Friends!</button>
+        
+        
+        <div class="button-group">
+            <button id="restartGameButton" class="btn-primary" >Play Again</button>
+            <button id="shareScoreButton" class="btn-secondary">Challenge Friends!</button>
+            <button id="backToMenuButton" class="btn-tertiary">Main Menu</button>
+        </div>
 
-        <div class="mt-8 w-full max-w-md">
-          <h3 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">Leaderboard</h3>
-          <ul id="leaderboard-list" class="text-xl text-white text-left mx-auto px-4 py-2 bg-gray-800 rounded-lg shadow-lg">
+        <div class="content-box">
+          <h3 class="ui-text-shadow">Leaderboard</h3>
+          <ul id="leaderboard-list" class="leaderboard-list" style="max-height: 20vh;">
             <li>Loading Leaderboard...</li>
           </ul>
         </div>
@@ -703,9 +423,16 @@
       const leaderboardScreen = document.getElementById("leaderboard-screen");
       const backToStartButton = document.getElementById("backToStartButton");
 
+      const backToMenuButton = document.getElementById("backToMenuButton");
+
       runsDisplayText = document.getElementById("runs-display");
       outsDisplayText = document.getElementById("outs-display");
       ballTypeDisplayText = document.getElementById("ball-type-display");
+
+      backToMenuButton.addEventListener("click", () => {
+        gameOverScreen.classList.add("hidden");
+        startScreen.classList.remove("hidden");
+      });
 
       startGameButton.addEventListener("click", async () => {
         const savedGameState = JSON.parse(localStorage.getItem('tapCricketGameState'));
@@ -741,7 +468,20 @@
 
         if (game) {
           game.destroy(true);
+          game = null;
         }
+        // Manually clear the container to be safe
+        const gameContainerEl = document.getElementById('game-container');
+        while (gameContainerEl.firstChild) {
+            gameContainerEl.removeChild(gameContainerEl.firstChild);
+        }
+
+        // Ensure the game container is visible BEFORE creating the new Phaser game instance
+        startScreen.classList.add("hidden");
+        gameContainer.classList.remove("hidden");
+        gameUI.classList.remove("hidden");
+        gameOverScreen.classList.add("hidden");
+
         game = new Phaser.Game(config);
 
         game.events.on("ready", () => {
@@ -987,7 +727,8 @@
       }
 
       function handleHitAttempt() {
-        if (!inputEnabled || !ballIsMoving || !gameActive || !ball) {
+        // Guard against running on an inactive scene
+        if (!inputEnabled || !ballIsMoving || !gameActive || !ball || !currentScene || !currentScene.sys || !currentScene.sys.isActive()) {
           return;
         }
         inputEnabled = false;
@@ -996,7 +737,6 @@
         const initialY = config.height * 0.75;
 
         // --- CTO's Realistic Bat Swing Animation (with 3D Arc) ---
-        // 1. Backswing
         currentScene.tweens.add({
             targets: bat,
             angle: 20,
@@ -1006,7 +746,7 @@
             ease: 'Power1',
             duration: 50,
             onComplete: () => {
-                // 2. Forward Swing
+                if (!currentScene || !currentScene.sys.isActive()) return;
                 currentScene.tweens.add({
                     targets: bat,
                     angle: -180,
@@ -1016,7 +756,7 @@
                     ease: 'Power2',
                     duration: 100,
                     onComplete: () => {
-                        // 3. Follow-through
+                        if (!currentScene || !currentScene.sys.isActive()) return;
                         currentScene.tweens.add({
                             targets: bat,
                             angle: 0,
@@ -1026,6 +766,7 @@
                             ease: 'Cubic.easeOut',
                             duration: 110,
                             onComplete: () => {
+                                if (!bat || !bat.scene) return; // Check if bat is still valid
                                 bat.setPosition(initialX, initialY);
                                 bat.setAngle(0);
                                 bat.setScale(1);
@@ -1043,10 +784,7 @@
           if (cheerSynth) {
             cheerSynth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
           }
-
           showFeedback("HIT!", "#00FF00");
-
-          // Use the randomly assigned score for the current ball
           currentRuns += currentBallScore; 
           updateUI();
           ballIsMoving = false;
@@ -1078,32 +816,33 @@
         if (!gameActive) {
           return;
         }
-
         currentOuts += 1;
         updateUI();
 
         if (currentOuts >= maxOuts) {
           endGame();
         } else {
-          currentScene.time.delayedCall(
-            1000,
-            resetBallAndBowlNext,
-            [],
-            currentScene
-          );
+          // Guard against calling on a destroyed scene
+          if (currentScene && currentScene.sys.isActive()) {
+            currentScene.time.delayedCall(
+              1000,
+              resetBallAndBowlNext,
+              [],
+              currentScene
+            );
+          }
         }
       }
 
       function showFeedback(message, color) {
-        if (feedbackText && currentScene) {
+        if (feedbackText && currentScene && currentScene.cameras.main) {
           feedbackText.setText(message);
           feedbackText.setColor(color);
           feedbackText.setVisible(true);
           feedbackText.setAlpha(1);
 
           const viewportHeightPixels = currentScene.cameras.main.displayHeight;
-          feedbackText.y =
-            viewportHeightPixels / 2 - viewportHeightPixels * 0.08;
+          feedbackText.y = viewportHeightPixels / 2 - viewportHeightPixels * 0.08;
 
           currentScene.tweens.add({
             targets: feedbackText,
@@ -1122,7 +861,7 @@
       }
 
       function resetBallAndBowlNext() {
-        if (ball) {
+        if (ball && ball.body) {
           ball.body.setVelocityX(0);
           ball.body.setVelocityY(0);
           ball.setVisible(false);
@@ -1133,14 +872,17 @@
           ball.y = config.height * BALL_INITIAL_Y;
         }
         if (bat) {
-          bat.setAngle(0); // Reset bat to initial angle
+          bat.setAngle(0);
         }
         ballIsMoving = false;
         hitWindowOpen = false;
         inputEnabled = false;
 
         if (gameActive) {
-          currentScene.time.delayedCall(1000, bowlBall, [], currentScene);
+          // Guard against calling on a destroyed scene
+          if (currentScene && currentScene.sys.isActive()) {
+            currentScene.time.delayedCall(1000, bowlBall, [], currentScene);
+          }
         }
       }
 
