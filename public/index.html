@@ -17,7 +17,7 @@
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://tap-hero-cricket.web.app/" />
     <meta property="twitter:title" content="Cricket Tap! - Hit Sixes, Top the Leaderboard!" />
-    <meta property="twitter:description" content="Experience the thrill of cricket with Cricket Tap! Tap to hit, score big, and challenge your friends for the top spot on the global leaderboard. Play now!" />
+    <meta property="twitter:description" content="Experience the thrill of cricket with Tap Hero Cricket! Tap to hit, score big, and challenge your friends for the top spot on the global leaderboard. Play now!" />
     <meta property="twitter:image" content="./assets/logo.png" />
 
     <!-- Google Analytics 4 (GA4) -->
@@ -453,10 +453,10 @@
     <div id="main-wrapper">
       <div id="start-screen" class="game-screen">
         <h1
-          class="text-5xl font-extrabold mb-10 text-yellow-400 ui-text-shadow"
-        >
-          Cricket Tap!
-        </h1>
+            class="text-5xl font-extrabold mb-10 text-yellow-400 ui-text-shadow"
+          >
+            Tap Hero Cricket
+          </h1>
 
         <div class="mb-6 w-full max-w-xs">
           <label
@@ -474,16 +474,30 @@
 
         <button
           id="startGameButton"
-          class="h-[50px] w-[200px] rounded-lg bg-blue-500"
+          class="h-[50px] w-[200px] rounded-lg bg-blue-500 mb-4"
         >
           Start Game
         </button>
         <button
           id="viewLeaderboardButton"
-          class="h-[50px] w-[200px] rounded-lg bg-green-500 mt-4"
+          class="h-[50px] w-[200px] rounded-lg bg-green-500"
         >
           View Leaderboard
         </button>
+
+        <div class="text-center text-white mt-8 max-w-md px-4 overflow-y-auto max-h-128">
+          <h2 class="text-3xl font-extrabold mb-4 text-yellow-300 ui-text-shadow">About Cricket Tap!</h2>
+          <p class="text-lg mb-4">Welcome to Cricket Tap! Experience the ultimate cricket challenge where every tap counts. Hit massive sixes, master different ball types, and climb the global leaderboard!</p>
+          
+          <h3 class="text-2xl font-bold mb-3 text-green-400 ui-text-shadow">How to Play:</h3>
+          <ul class="list-disc list-inside text-left mx-auto mb-4">
+            <li class="mb-2">Tap anywhere on the screen when the ball is in the hitting zone.</li>
+            <li class="mb-2">Time your tap perfectly to score big!</li>
+            <li class="mb-2">Watch out for fast balls, yorkers, and spin deliveries – each requires precise timing.</li>
+            <li>Score as many runs as you can before getting three outs!</li>
+          </ul>
+          <p class="text-md mt-4">Challenge your friends and see who can become the ultimate Cricket Tap champion!</p>
+        </div>
       </div>
 
       <div id="leaderboard-screen" class="game-screen hidden">
@@ -733,6 +747,11 @@
         game.events.on("ready", () => {
           currentScene = game.scene.scenes[0];
         });
+
+        // Show interstitial ad when game starts
+        if (typeof adBreak !== "undefined") {
+          adBreak({ type: 'start' });
+        }
       });
 
       document.addEventListener('DOMContentLoaded', () => { 
